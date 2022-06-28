@@ -193,7 +193,7 @@ data:
               - "pods"
         sideEffects: None
         admissionReviewVersions: ["v1"]
-        failurePolicy: Fail
+        failurePolicy: Ignore
         reinvocationPolicy: IfNeeded
         namespaceSelector:
           matchLabels:
@@ -208,7 +208,7 @@ metadata:
 apiVersion: v1
 data:
   maps: |
-    default:registry.example.com
+    default::registry.example.com
 kind: ConfigMap
 metadata:
   creationTimestamp: null
