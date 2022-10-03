@@ -35,7 +35,6 @@ imageswap_namespace_name = os.getenv("IMAGESWAP_NAMESPACE_NAME", "imageswap-syst
 imageswap_pod_name = os.getenv("IMAGESWAP_POD_NAME")
 imageswap_disable_label = os.getenv("IMAGESWAP_DISABLE_LABEL", "k8s.twr.io/imageswap")
 imageswap_mode = os.getenv("IMAGESWAP_MODE", "MAPS")
-imageswap_with_path = os.getenv("IMAGESWAP_INCLUDE_PATH", "true")
 imageswap_maps_file = os.getenv("IMAGESWAP_MAPS_FILE", "/app/maps/imageswap-maps.conf")
 imageswap_maps_default_key = "default"
 imageswap_maps_wildcard_key = "noswap_wildcards"
@@ -44,7 +43,7 @@ imageswap_maps_wildcard_key = "noswap_wildcards"
 metrics = PrometheusMetrics(app, defaults_prefix="imageswap")
 
 # Static information as metric
-metrics.info("app_info", "Application info", version="v1.4.4")
+metrics.info("app_info", "Application info", version="v1.2.0")
 
 # Set logging config
 log = logging.getLogger("werkzeug")
@@ -334,27 +333,15 @@ def swap_image(container_spec):
                 # If the image prefix ends with "-" just append existing image (minus any ":<port_number>")
                 elif swap_maps[image_registry_key][-1] == "-":
                     if no_registry:
-                        if imageswap_with_path.lower() == "false":
-                            new_image = swap_maps[image_registry_key] + image_registry_noport + "/" + re.sub(r"(^.*/)+(.*)", r"\2", image)
-                        else:
-                            new_image = swap_maps[image_registry_key] + image_registry_noport + "/" + re.sub(r":.*/", "/", image)
+                        new_image = swap_maps[image_registry_key] + image_registry_noport + "/" + re.sub(r":.*/", "/", image)
                     else:
-                        if imageswap_with_path.lower() == "false":
-                            new_image = swap_maps[image_registry_key] + re.sub(r"(^.*/)+(.*)", r"/\2", image)
-                        else:
-                            new_image = swap_maps[image_registry_key] + re.sub(r":.*/", "/", image)
+                        new_image = swap_maps[image_registry_key] + re.sub(r":.*/", "/", image)
                 # If the image registry pattern is found in the original image
                 elif image_registry_key in image:
-                    if imageswap_with_path.lower() == "false":
-                        new_image = swap_maps[image_registry_key] + re.sub(r"(^.*/)+(.*)", r"/\2", image)
-                    else:
-                        new_image = re.sub(image_registry_key, swap_maps[image_registry_key], image)
+                    new_image = re.sub(image_registry_key, swap_maps[image_registry_key], image)
                 # For everything else
                 else:
-                    if imageswap_with_path.lower() == "false":
-                        new_image = swap_maps[image_registry_key] + re.sub(r"(^.*/)+(.*)", r"/\2", image)
-                    else:
-                        new_image = swap_maps[image_registry_key] + "/" + image
+                    new_image = swap_maps[image_registry_key] + "/" + image
 
                 app.logger.debug(f'Swap Map = "{image_registry_key}" : "{swap_maps[image_registry_key]}"')
 
@@ -373,21 +360,11 @@ def swap_image(container_spec):
                     app.logger.debug(f"Default map has no value assigned, skipping swap")
                     return False
                 elif swap_maps[imageswap_maps_default_key][-1] == "-":
-
-                    if imageswap_with_path.lower() == "false":
-                        new_image = swap_maps[imageswap_maps_default_key] + image_registry_noport + "/" + re.sub(r"(^.*/)+(.*)", r"\2", image)
-                    else:
-                        new_image = swap_maps[imageswap_maps_default_key] + image_registry_noport + "/" + image
+                    new_image = swap_maps[imageswap_maps_default_key] + image_registry_noport + "/" + image
                 elif image_registry_key in image:
-                    if imageswap_with_path.lower() == "false":
-                        new_image = swap_maps[imageswap_maps_default_key] + re.sub(r"(^.*/)+(.*)", r"/\2", image)
-                    else:
-                        new_image = re.sub(image_registry, swap_maps[imageswap_maps_default_key], image)
+                    new_image = re.sub(image_registry, swap_maps[imageswap_maps_default_key], image)
                 else:
-                    if imageswap_with_path.lower() == "false":
-                        new_image = swap_maps[imageswap_maps_default_key] + "/" + re.sub(r"(^.*/)+(.*)", r"\2", image)
-                    else:
-                        new_image = swap_maps[imageswap_maps_default_key] + "/" + image
+                    new_image = swap_maps[imageswap_maps_default_key] + "/" + image
 
     # TO-DO (phenixblue): Remove this else block sometime in the future...
     # This "else" block maintains the legacy imageswap logic, which is now

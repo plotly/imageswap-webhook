@@ -159,7 +159,6 @@ metadata:
 data:
   FLASK_ENV: "production"
   PYTHONUNBUFFERED: "TRUE"
-  IMAGESWAP_INCLUDE_PATH: "false"
   IMAGESWAP_MODE: "MAPS"
   IMAGESWAP_LOG_LEVEL: "INFO"
 
@@ -192,7 +191,9 @@ data:
               - "*"
             resources:
               - "pods"
-        failurePolicy: Ignore
+        sideEffects: None
+        admissionReviewVersions: ["v1"]
+        failurePolicy: Fail
         reinvocationPolicy: IfNeeded
         namespaceSelector:
           matchLabels:
@@ -207,7 +208,7 @@ metadata:
 apiVersion: v1
 data:
   maps: |
-    default::registry.example.com
+    default:registry.example.com
 kind: ConfigMap
 metadata:
   creationTimestamp: null
@@ -298,7 +299,7 @@ spec:
               mountPath: /mwc
       containers:
       - name: imageswap
-        image: quay.io/plotly/imageswap:v1.4.4
+        image: thewebroot/imageswap:v1.5.1
         ports:
         - containerPort: 5000
         command: ["gunicorn", "imageswap:app", "--config=config.py"]
